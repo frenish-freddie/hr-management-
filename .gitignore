@@ -1,1 +1,20 @@
+# Node
+node_modules/
+dist/
+
+# Python
+__pycache__/
+.venv/
+
+# Env
+.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+# Databases
+*.db
 hr-portal/src/pages/
