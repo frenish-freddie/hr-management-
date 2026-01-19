@@ -21,17 +21,11 @@ db.commit()
 # ---------- JOBS ----------
 for i in range(1, 101):
     job = Job(
-        job_title=random.choice([
-            "Software Engineer",
-            "HR Executive",
-            "Backend Developer",
-            "Frontend Developer",
-            "QA Engineer"
-        ]),
-        job_description="Responsible for assigned role and team collaboration",
+        job_title=random.choice(["Software Engineer", "HR Executive", "Backend Developer"]),
+        job_description="Responsible for assigned role",
         expected_close_date=date.today() + timedelta(days=random.randint(10, 90)),
         budget=random.randint(300000, 1500000),
-        emp_id=f"EMP{random.randint(1, 100):03}"
+        emp_id=f"EMP{random.randint(1,100):03}"
     )
     db.add(job)
 db.commit()
@@ -42,8 +36,8 @@ for i in range(1, 101):
     app = Application(
         job_id=random.randint(1, 100),
         name=f"Applicant {i}",
-        email=f"applicant{i}@aptivora.it",
-        phone=f"9{random.randint(100000000, 999999999)}",
+        email=f"applicant{i}@gmail.com",
+        phone=f"9{random.randint(100000000,999999999)}",
         resume=f"/resumes/applicant{i}.pdf",
         experience=round(random.uniform(0, 10), 1),
         ctc=ctc,
@@ -57,30 +51,14 @@ for i in range(1, 101):
     em = EmployeeManagement(
         personal={
             "employee_code": f"EMP{i:03}",
-            "name": {
-                "first_name": f"Emp{i}",
-                "last_name": "User"
-            },
-            "contact": {
-                "email": f"emp{i}@aptivora.it",
-                "phone": f"9{random.randint(100000000, 999999999)}"
-            },
+            "name": {"first_name": f"Emp{i}", "last_name": "User"},
+            "contact": {"email": f"emp{i}@aptivora.it", "phone": f"9{random.randint(100000000,999999999)}"},
             "dob": "1998-01-01",
             "gender": "Female",
             "blood_group": "O+",
             "marital_status": "Single",
-            "address": {
-                "house": "H1",
-                "street": "Main Road",
-                "city": "Kochi",
-                "state": "Kerala",
-                "pincode": "680001"
-            },
-            "emergency_contact": {
-                "name": "Parent",
-                "relation": "Father",
-                "phone": "9876543210"
-            }
+            "address": {"house": "H1", "street": "Main", "city": "Kochi", "state": "Kerala", "pincode": "680001"},
+            "emergency_contact": {"name": "Parent", "relation": "Father", "phone": "9876543210"}
         },
         employment={
             "role": "Staff",
@@ -94,10 +72,7 @@ for i in range(1, 101):
             "status": "Active"
         },
         compensation=[
-            {
-                "type": "CTC",
-                "amount": random.randint(300000, 900000)
-            }
+            {"type": "CTC", "amount": random.randint(300000, 900000)}
         ]
     )
     db.add(em)

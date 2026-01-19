@@ -63,15 +63,18 @@ from app import schemas, models
 from fastapi import HTTPException
 
 # 🔹 POST: Apply to a job
+from fastapi import Form, File, UploadFile, Depends
+from sqlalchemy.orm import Session
+
 @app.post("/applications/", response_model=schemas.ApplicationResponse)
 async def apply_job(
-    job_id: int,
-    name: str,
-    email: str,
-    phone: str,
-    experience: float,
-    ctc: float,
-    expected_ctc: float,
+    job_id: int = Form(...),
+    name: str = Form(...),
+    email: str = Form(...),
+    phone: str = Form(...),
+    experience: float = Form(...),
+    ctc: float = Form(...),
+    expected_ctc: float = Form(...),
     resume: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
@@ -96,7 +99,9 @@ async def apply_job(
     db.add(new_app)
     db.commit()
     db.refresh(new_app)
+
     return new_app
+
 
 # 🔹 GET: View applications for a job (HR)
 @app.get("/applications/{job_id}", response_model=list[schemas.ApplicationResponse])
@@ -115,21 +120,35 @@ from sqlalchemy.orm import Session
 from app.database import get_db, engine, Base
 from app.models import EmployeeManagement
 from app.schemas import CompensationItem
+from app.schemas import EmployeeManagementSchema, CompensationItem
 
 Base.metadata.create_all(bind=engine)
 
 
+@app.post("/employee", response_model=None)
+def create_employee(
+    employee_data: EmployeeManagementSchema,
+    db: Session = Depends(get_db)
+):
+    employee = EmployeeManagement(
+        personal=employee_data.personal,
+        employment=employee_data.employment,
+        compensation=[
+            item.model_dump() for item in employee_data.compensation
+        ],
+        attendance=employee_data.attendance,
+        assets=employee_data.assets,
+        documents=employee_data.documents,
+        exit_details=employee_data.exit_details
+    )
 
-@app.post("/employee")
-def create_employee(db: Session = Depends(get_db)):
-    employee = EmployeeManagement()
     db.add(employee)
     db.commit()
     db.refresh(employee)
     return employee
 
 
-@app.post("/employee/{emp_id}/compensation")
+@app.post("/employee/{emp_id}/compensation", response_model=None)
 def add_compensation(
     emp_id: int,
     new_comp: CompensationItem,
@@ -140,12 +159,10 @@ def add_compensation(
     if not employee:
         raise HTTPException(status_code=404, detail="Employee not found")
 
-    # ✅ SAFETY
     if employee.compensation is None:
         employee.compensation = []
 
-    employee.compensation.append(new_comp.dict())
-
+    employee.compensation.append(new_comp.model_dump())
     db.commit()
     db.refresh(employee)
 
@@ -155,7 +172,7 @@ def add_compensation(
     }
 
 
-@app.get("/employee/{emp_id}")
+@app.get("/employee/{emp_id}", response_model=None)
 def get_employee(emp_id: int, db: Session = Depends(get_db)):
     employee = db.query(EmployeeManagement).filter(EmployeeManagement.id == emp_id).first()
 
