@@ -28,6 +28,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+import os
+from fastapi.staticfiles import StaticFiles
+
+# Ensure resumes directory exists
+os.makedirs("resumes", exist_ok=True)
+
+# Mount the directory to serve files
+app.mount("/resumes", StaticFiles(directory="resumes"), name="resumes")
+
 
 app.include_router(auth_router, prefix="/auth")
 
@@ -56,6 +65,14 @@ def create_job(job: schemas.JobCreate, db: Session = Depends(get_db)):
 def get_jobs(db: Session = Depends(get_db)):
     jobs = db.query(models.Job).all()
     return jobs
+
+
+@app.get("/jobs/{job_id}", response_model=schemas.JobResponse)
+def get_job(job_id: int, db: Session = Depends(get_db)):
+    job = db.query(models.Job).filter(models.Job.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
 
 
 from fastapi import UploadFile, File

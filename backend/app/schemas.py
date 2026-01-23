@@ -1,106 +1,150 @@
-import random
-from datetime import date, timedelta
-from sqlalchemy.orm import Session
-from app.database import SessionLocal
-from app.models import Employee, Job, Application, EmployeeManagement
+from pydantic import BaseModel, EmailStr, field_validator
+from datetime import date
+from typing import List, Dict, Any, Optional
 
-db: Session = SessionLocal()
+class RegisterUser(BaseModel):
+    emp_id: str
+    name: str
+    email: EmailStr
+    password: str
+    confirm_password: str
+    role: str
+    seniority: Optional[str] = None
+    team_name: Optional[str] = None
 
-# ---------- EMPLOYEES ----------
-for i in range(1, 101):
-    emp = Employee(
-        emp_id=f"EMP{i:03}",
-        name=f"Employee {i}",
-        email=f"emp{i}@aptivora.it",
-        password="password123",
-        role="junior_hr" if i % 2 == 0 else "senior_hr"
-    )
-    db.add(emp)
-db.commit()
+    @field_validator("confirm_password")
+    @classmethod
+    def passwords_match(cls, v, info):
+        if "password" in info.data and v != info.data["password"]:
+            raise ValueError("Passwords do not match")
+        return v
 
-# ---------- JOBS ----------
-for i in range(1, 101):
-    job = Job(
-        job_title=random.choice([
-            "Software Engineer",
-            "HR Executive",
-            "Backend Developer",
-            "Frontend Developer",
-            "QA Engineer"
-        ]),
-        job_description="Responsible for assigned role and team collaboration",
-        expected_close_date=date.today() + timedelta(days=random.randint(10, 90)),
-        budget=random.randint(300000, 1500000),
-        emp_id=f"EMP{random.randint(1, 100):03}"
-    )
-    db.add(job)
-db.commit()
 
-# ---------- APPLICATIONS ----------
-for i in range(1, 101):
-    ctc = random.randint(200000, 800000)
-    app = Application(
-        job_id=random.randint(1, 100),
-        name=f"Applicant {i}",
-        email=f"applicant{i}@aptivora.it",
-        phone=f"9{random.randint(100000000, 999999999)}",
-        resume=f"/resumes/applicant{i}.pdf",
-        experience=round(random.uniform(0, 10), 1),
-        ctc=ctc,
-        expected_ctc=ctc + random.randint(50000, 200000)
-    )
-    db.add(app)
-db.commit()
+class LoginUser(BaseModel):
+    emp_id: str
+    password: str
 
-# ---------- EMPLOYEE MANAGEMENT ----------
-for i in range(1, 101):
-    em = EmployeeManagement(
-        personal={
-            "employee_code": f"EMP{i:03}",
-            "name": {
-                "first_name": f"Emp{i}",
-                "last_name": "User"
-            },
-            "contact": {
-                "email": f"emp{i}@aptivora.it",
-                "phone": f"9{random.randint(100000000, 999999999)}"
-            },
-            "dob": "1998-01-01",
-            "gender": "Female",
-            "blood_group": "O+",
-            "marital_status": "Single",
-            "address": {
-                "house": "H1",
-                "street": "Main Road",
-                "city": "Kochi",
-                "state": "Kerala",
-                "pincode": "680001"
-            },
-            "emergency_contact": {
-                "name": "Parent",
-                "relation": "Father",
-                "phone": "9876543210"
-            }
-        },
-        employment={
-            "role": "Staff",
-            "designation": "Developer",
-            "department": "IT",
-            "employment_type": "Full-Time",
-            "date_of_joining": "2023-01-01",
-            "work_location": "Remote",
-            "manager_id": "EMP001",
-            "manager_name": "Employee 1",
-            "status": "Active"
-        },
-        compensation=[
-            {
-                "type": "CTC",
-                "amount": random.randint(300000, 900000)
-            }
-        ]
-    )
-    db.add(em)
-db.commit()
+class JobCreate(BaseModel):
+    job_title: str
+    job_description: str
+    expected_close_date: date
+    budget: float
+    emp_id: str
 
-print("✅ 100 dummy records inserted successfully")
+
+class JobResponse(BaseModel):
+    id: int
+    job_title: str
+    job_description: str
+    expected_close_date: date
+    budget: float
+    emp_id: str
+
+    class Config:
+        from_attributes = True
+
+
+
+class ApplicationCreate(BaseModel):
+    job_id: int
+    name: str
+    email: EmailStr
+    phone: str
+    resume: Optional[str] = None  # store filename/path
+    experience: float
+    ctc: float
+    expected_ctc: float
+
+class ApplicationResponse(BaseModel):
+    id: int
+    job_id: int
+    name: str
+    email: EmailStr
+    phone: str
+    resume: Optional[str]
+    experience: float
+    ctc: float
+    expected_ctc: float
+
+    class Config:
+        from_attributes = True
+
+
+
+
+
+class BankDetails(BaseModel):
+    bank_name: str
+    account_number: str
+    ifsc_code: str
+
+
+class CompensationItem(BaseModel):
+    basic_salary: float
+    hra: float
+    allowances: float
+    bonus: float
+    pf: float
+    tax: float
+    advances: float = 0.0
+    net_salary: float
+    payment_date: Optional[date] = None
+    bank_details: BankDetails
+     
+
+class EmployeeManagementSchema(BaseModel):
+    personal: Optional[Dict[str, Any]] = None
+    employment: Optional[Dict[str, Any]] = None
+    compensation: Optional[List[Dict[str, Any]]] = []
+    attendance: Optional[Dict[str, Any]] = None
+    assets: Optional[Dict[str, Any]] = None
+    documents: Optional[Dict[str, Any]] = None
+    exit_details: Optional[Dict[str, Any]] = None
+
+    class Config:
+        from_attributes = True
+
+
+    bank_details: Optional[dict] = {}
+
+
+class RecentApplication(BaseModel):
+    name: str
+    job_title: str
+    applied_on: date
+
+class DashboardStats(BaseModel):
+    total_jobs: int
+    total_applications: int
+    total_junior_hrs: int
+    recent_applications: List[RecentApplication]
+
+
+class EmployeeFullResponse(BaseModel):
+    emp_id: str
+    name: str
+    email: EmailStr
+    role: str
+    seniority: Optional[str]
+    team_name: Optional[str]
+    management: Optional[EmployeeManagementSchema] = None
+
+    class Config:
+        from_attributes = True
+
+class EmployeeCreateFull(BaseModel):
+    emp_id: str
+    name: str
+    email: EmailStr
+    password: str
+    role: str
+    seniority: Optional[str] = None
+    team_name: Optional[str] = None
+    # Management fields
+    personal: Optional[dict] = None
+    employment: Optional[dict] = None
+    compensation: Optional[List[dict]] = []
+    attendance: Optional[dict] = None
+    assets: Optional[dict] = None
+    documents: Optional[dict] = None
+    exit_details: Optional[dict] = None
