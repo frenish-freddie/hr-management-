@@ -8,6 +8,8 @@ import Jobs from "./pages/Jobs";
 import Login from "./pages/login";
 import HrDashboard from "./pages/HrDashboard";
 import EmployeeDashboard from "./pages/EmployeeDashboard";
+import ApplicationForm from "./components/ApplicationForm";
+import ViewApplications from "./components/ViewApplications";
 
 export default function App() {
   return (
@@ -19,6 +21,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/jobs" element={<Jobs />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/applications/:jobId/apply" element={<ApplicationForm />} />
 
         {/* Protected routes */}
         <Route
@@ -29,6 +32,15 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/hr/jobs/:jobId/applications"
+          element={
+            <ProtectedRoute allowedRole="hr">
+              <ViewApplications />
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="/register" element={<Register />} />
 
 
